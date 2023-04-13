@@ -3,6 +3,7 @@ package ru.izotov.battlecity.models
 import android.view.View
 import android.widget.FrameLayout
 import ru.izotov.battlecity.CELL_SIZE
+import ru.izotov.battlecity.drawers.BulletDrawer
 import ru.izotov.battlecity.enums.Direction
 import ru.izotov.battlecity.enums.Material
 import ru.izotov.battlecity.utils.checkViewCanMoveThroughBorder
@@ -10,9 +11,10 @@ import ru.izotov.battlecity.utils.getElementByCoordinates
 import ru.izotov.battlecity.utils.runOnUiThread
 import kotlin.random.Random
 
-class Tank(
+class Tank constructor(
     val element: Element,
-    var direction: Direction
+    var direction: Direction,
+    val bulletDrawer: BulletDrawer,
 ) {
     fun move(
         direction: Direction,

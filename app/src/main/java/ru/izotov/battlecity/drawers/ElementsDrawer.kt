@@ -44,6 +44,7 @@ class ElementsDrawer(private val container: FrameLayout) {
             currentMaterial = element.material
             drawElement(element)
         }
+        currentMaterial = EMPTY
     }
     
     private fun replaceView(coordinate: Coordinate) {
