@@ -9,6 +9,10 @@ import ru.izotov.battlecity.HORIZONTAL_MAX_SIZE
 import ru.izotov.battlecity.VERTICAL_MAX_SIZE
 import ru.izotov.battlecity.models.Coordinate
 import ru.izotov.battlecity.models.Element
+import ru.izotov.battlecity.models.Tank
+import kotlin.random.Random
+
+const val TOTAL_PERCENT = 100
 
 fun View.checkViewCanMoveThroughBorder(coordinate: Coordinate): Boolean {
     if (coordinate.top >= 0
@@ -60,4 +64,12 @@ fun FrameLayout.runOnUiThread(block: () -> Unit) {
     (this.context as Activity).runOnUiThread {
         block()
     }
+}
+
+ fun getTankByCoordinates(coordinate: Coordinate, tanksList: List<Tank>): Element? {
+    return getElementByCoordinates(coordinate, tanksList.map { it.element })
+}
+
+fun checkIfChanceBiggerThanRandom(percentChance: Int): Boolean {
+    return Random.nextInt(TOTAL_PERCENT) <= percentChance
 }

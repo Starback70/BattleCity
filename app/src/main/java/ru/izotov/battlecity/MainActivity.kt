@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
             Element(
                 material = PLAYER_TANK,
                 coordinate = getPlayerTankCoordinate()
-            ), UP, BulletDrawer(container)
+            ), UP, BulletDrawer(container, elementsDrawer.elementsOnContainer, enemyDrawer)
         )
     }
     
@@ -161,10 +161,7 @@ class MainActivity : AppCompatActivity() {
             KEYCODE_DPAD_LEFT -> move(LEFT)
             KEYCODE_DPAD_DOWN -> move(DOWN)
             KEYCODE_DPAD_RIGHT -> move(RIGHT)
-            KEYCODE_SPACE -> playerTank.bulletDrawer.makeBulletMove(
-                playerTank,
-                elementsDrawer.elementsOnContainer
-            )
+            KEYCODE_SPACE -> playerTank.bulletDrawer.makeBulletMove(playerTank)
         }
         return super.onKeyDown(keyCode, event)
     }

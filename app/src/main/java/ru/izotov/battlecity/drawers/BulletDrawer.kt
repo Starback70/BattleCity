@@ -4,7 +4,6 @@ import android.app.Activity
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
-import kotlinx.coroutines.Runnable
 import ru.izotov.battlecity.CELL_SIZE
 import ru.izotov.battlecity.R
 import ru.izotov.battlecity.enums.Direction
@@ -15,12 +14,17 @@ import ru.izotov.battlecity.models.Element
 import ru.izotov.battlecity.models.Tank
 import ru.izotov.battlecity.utils.checkViewCanMoveThroughBorder
 import ru.izotov.battlecity.utils.getElementByCoordinates
+import ru.izotov.battlecity.utils.getTankByCoordinates
 import ru.izotov.battlecity.utils.runOnUiThread
 
 private const val BULLET_WIDTH = 15
 private const val BULLET_HEIGHT = 25
 
-class BulletDrawer(private val container: FrameLayout) {
+class BulletDrawer(
+    private val container: FrameLayout,
+    private val elements: MutableList<Element>,
+    val enemyDrawer: EnemyDrawer
+) {
     
     private var canBulletGoFurther = true
     private var bulletThread: Thread? = null
@@ -28,7 +32,7 @@ class BulletDrawer(private val container: FrameLayout) {
     
     private fun checkBulletThreadAlive() = bulletThread != null && bulletThread!!.isAlive
     
-    fun makeBulletMove(tank: Tank, elementsOnContainer: MutableList<Element>) {
+    fun makeBulletMove(tank: Tank) {
         canBulletGoFurther = true
         this.tank = tank
         val currentDirection = tank.direction
@@ -38,8 +42,7 @@ class BulletDrawer(private val container: FrameLayout) {
                 val bullet = createBullet(view, currentDirection)
                 while (bullet.checkViewCanMoveThroughBorder(
                         Coordinate(
-                            bullet.top,
-                            bullet.left
+                            bullet.top, bullet.left
                         )
                     ) && canBulletGoFurther
                 ) {
@@ -51,9 +54,7 @@ class BulletDrawer(private val container: FrameLayout) {
                     }
                     Thread.sleep(30)
                     chooseBehaviorInTermsOfDirections(
-                        elementsOnContainer,
-                        currentDirection,
-                        Coordinate(
+                        currentDirection, Coordinate(
                             (bullet.layoutParams as FrameLayout.LayoutParams).topMargin,
                             (bullet.layoutParams as FrameLayout.LayoutParams).leftMargin
                         )
@@ -72,39 +73,34 @@ class BulletDrawer(private val container: FrameLayout) {
     }
     
     private fun chooseBehaviorInTermsOfDirections(
-        elementsOnContainer: MutableList<Element>,
-        currentDirection: Direction,
-        bulletCoordinate: Coordinate
+        currentDirection: Direction, bulletCoordinate: Coordinate
     ) {
         when (currentDirection) {
             DOWN, UP -> {
-                compareCollections(
-                    elementsOnContainer, getCoordinatesForTopOrBottomDirection(bulletCoordinate)
-                )
+                compareCollections(getCoordinatesForTopOrBottomDirection(bulletCoordinate))
             }
             LEFT, RIGHT -> {
-                compareCollections(
-                    elementsOnContainer, getCoordinatesForLeftOrRightDirection(bulletCoordinate)
-                )
+                compareCollections(getCoordinatesForLeftOrRightDirection(bulletCoordinate))
             }
         }
     }
     
     private fun compareCollections(
-        elementsOnContainer: MutableList<Element>,
         detectedCoordinatesList: List<Coordinate>
     ) {
         for (coordinate in detectedCoordinatesList) {
-            val element = getElementByCoordinates(coordinate, elementsOnContainer)
+            var element = getElementByCoordinates(coordinate, elements)
+            if (element == null) {
+                element = getTankByCoordinates(coordinate, enemyDrawer.tanks)
+            }
             if (element == tank.element) {
                 continue
             }
-            removeElementsAndStopBullet(element, elementsOnContainer)
+            removeElementsAndStopBullet(element)
         }
     }
-    
-    
-    private fun removeElementsAndStopBullet(element: Element?, elementsOnContainer: MutableList<Element>) {
+   
+    private fun removeElementsAndStopBullet(element: Element?) {
         if (element != null) {
             if (element.material.bulletCanGoThrough) {
                 return
@@ -116,11 +112,18 @@ class BulletDrawer(private val container: FrameLayout) {
             if (element.material.simpleBulletCanDestroy) {
                 stopBullet()
                 removeView(element)
-                elementsOnContainer.remove(element)
+                elements.remove(element)
+                removeTank(element)
             } else {
                 stopBullet()
             }
         }
+    }
+    
+    private fun removeTank(element: Element) {
+        val tanksElements = enemyDrawer.tanks.map { it.element }
+        val tankIndex = tanksElements.indexOf(element)
+        enemyDrawer.removeTank(tankIndex)
     }
     
     private fun stopBullet() {
@@ -140,8 +143,7 @@ class BulletDrawer(private val container: FrameLayout) {
         val rightCell = leftCell + CELL_SIZE
         val topCoordinate = bulletCoordinate.top - bulletCoordinate.top % CELL_SIZE
         return listOf(
-            Coordinate(topCoordinate, leftCell),
-            Coordinate(topCoordinate, rightCell)
+            Coordinate(topCoordinate, leftCell), Coordinate(topCoordinate, rightCell)
         )
     }
     
@@ -150,27 +152,23 @@ class BulletDrawer(private val container: FrameLayout) {
         val bottomCell = topCell + CELL_SIZE
         val leftCoordinate = bulletCoordinate.left - bulletCoordinate.left % CELL_SIZE
         return listOf(
-            Coordinate(topCell, leftCoordinate),
-            Coordinate(bottomCell, leftCoordinate)
+            Coordinate(topCell, leftCoordinate), Coordinate(bottomCell, leftCoordinate)
         )
     }
     
     private fun createBullet(myTank: View, currentDirection: Direction): ImageView {
-        return ImageView(container.context)
-            .apply {
-                this.setImageResource(R.drawable.bullet)
-                this.layoutParams = FrameLayout.LayoutParams(BULLET_WIDTH, BULLET_HEIGHT)
-                val bulletCoordinate = getBulletCoordinates(this, myTank, currentDirection)
-                (this.layoutParams as FrameLayout.LayoutParams).topMargin = bulletCoordinate.top
-                (this.layoutParams as FrameLayout.LayoutParams).leftMargin = bulletCoordinate.left
-                this.rotation = currentDirection.rotation
-            }
+        return ImageView(container.context).apply {
+            this.setImageResource(R.drawable.bullet)
+            this.layoutParams = FrameLayout.LayoutParams(BULLET_WIDTH, BULLET_HEIGHT)
+            val bulletCoordinate = getBulletCoordinates(this, myTank, currentDirection)
+            (this.layoutParams as FrameLayout.LayoutParams).topMargin = bulletCoordinate.top
+            (this.layoutParams as FrameLayout.LayoutParams).leftMargin = bulletCoordinate.left
+            this.rotation = currentDirection.rotation
+        }
     }
     
     private fun getBulletCoordinates(
-        bullet: ImageView,
-        myTank: View,
-        currentDirection: Direction
+        bullet: ImageView, myTank: View, currentDirection: Direction
     ): Coordinate {
         val tankLeftTopCoordinate = Coordinate(myTank.top, myTank.left)
         return when (currentDirection) {
