@@ -27,13 +27,14 @@ const val VERTICAL_SIZE = CELL_SIZE * VERTICAL_CELL_AMOUNT
 
 
 class MainActivity : AppCompatActivity() {
+    private var editMode = false
     private val playerTank = Tank(
         Element(
             R.id.myTank,
             PLAYER_TANK,
             Coordinate(0, 0),
             PLAYER_TANK.width,
-            PLAYER_TANK.height,
+            PLAYER_TANK.height
         ), UP
     )
     private lateinit var clear: ImageView
@@ -41,30 +42,34 @@ class MainActivity : AppCompatActivity() {
     private lateinit var concrete: ImageView
     private lateinit var grass: ImageView
     private lateinit var eagle: ImageView
-    private var editMode = false
     private lateinit var myTank: ImageView
     private lateinit var container: FrameLayout
     private lateinit var materialsContainer: LinearLayout
     private val gridDrawer by lazy {
         GridDrawer(container)
     }
+    
     private val elementsDrawer by lazy {
         ElementsDrawer(container)
     }
+    
     private val bulletDrawer by lazy {
         BulletDrawer(container)
     }
+    
     private val levelStorage by lazy {
         LevelStorage(this)
     }
+    
     private val enemyDrawer by lazy {
-        EnemyDrawer(container)
+        EnemyDrawer(container, elementsDrawer.elementsOnContainer)
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         init()
+        container.layoutParams = FrameLayout.LayoutParams(HORIZONTAL_SIZE, VERTICAL_SIZE)
         clear.setOnClickListener { elementsDrawer.currentMaterial = EMPTY }
         brick.setOnClickListener { elementsDrawer.currentMaterial = BRICK }
         concrete.setOnClickListener { elementsDrawer.currentMaterial = CONCRETE }
@@ -76,12 +81,11 @@ class MainActivity : AppCompatActivity() {
         }
         elementsDrawer.drawElementsList(levelStorage.loadLevel())
         hideSettings()
-        elementsDrawer.elementsOnContainer.add(playerTank.element)
+//        elementsDrawer.elementsOnContainer.add(playerTank.element)
     }
     
     private fun init() {
         container = findViewById(R.id.container)
-        container.layoutParams = FrameLayout.LayoutParams(HORIZONTAL_SIZE, VERTICAL_SIZE)
         materialsContainer = findViewById(R.id.materials_container)
         myTank = findViewById(R.id.myTank)
         clear = findViewById(R.id.editor_clear)
@@ -95,7 +99,7 @@ class MainActivity : AppCompatActivity() {
         menuInflater.inflate(R.menu.settings, menu)
         return true
     }
-    
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_setting -> {
@@ -113,14 +117,15 @@ class MainActivity : AppCompatActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
-    
+
     private fun startGame() {
         if (editMode) {
             return
         }
-        enemyDrawer.startEnemyDrawing(elementsDrawer.elementsOnContainer)
+        enemyDrawer.startEnemyCreation()
+        enemyDrawer.moveEnemyTanks()
     }
-    
+
     private fun switchEditMode() {
         editMode = !editMode
         if (editMode) {
@@ -129,7 +134,7 @@ class MainActivity : AppCompatActivity() {
             hideSettings()
         }
     }
-    
+
     private fun showSettings() {
         gridDrawer.drawGrid()
         materialsContainer.visibility = VISIBLE
@@ -155,7 +160,7 @@ class MainActivity : AppCompatActivity() {
         return super.onKeyDown(keyCode, event)
     }
     
-    private fun move(direction: Direction){
+    private fun move(direction: Direction) {
         playerTank.move(direction, container, elementsDrawer.elementsOnContainer)
         
     }

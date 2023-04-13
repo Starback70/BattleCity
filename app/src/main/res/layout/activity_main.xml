@@ -13,8 +13,8 @@
 
         <ImageView
             android:id="@+id/myTank"
-            android:layout_width="@dimen/cell_size"
-            android:layout_height="@dimen/cell_size"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:src="@drawable/tank" />
 
     </FrameLayout>
