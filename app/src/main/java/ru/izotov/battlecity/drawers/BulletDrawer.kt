@@ -12,6 +12,7 @@ import ru.izotov.battlecity.models.Coordinate
 import ru.izotov.battlecity.models.Element
 import ru.izotov.battlecity.utils.checkViewCanMoveThroughBorder
 import ru.izotov.battlecity.utils.getElementByCoordinates
+import ru.izotov.battlecity.utils.runOnUiThread
 
 private const val BULLET_WIDTH = 15
 private const val BULLET_HEIGHT = 25
@@ -50,12 +51,12 @@ class BulletDrawer(private val container: FrameLayout) {
                             (bullet.layoutParams as FrameLayout.LayoutParams).leftMargin
                         )
                     )
-                    (container.context as Activity).runOnUiThread {
+                    container.runOnUiThread {
                         container.removeView(bullet)
                         container.addView(bullet)
                     }
                 }
-                (container.context as Activity).runOnUiThread {
+                container.runOnUiThread {
                     container.removeView(bullet)
                 }
             }
@@ -176,7 +177,6 @@ private fun getBulletCoordinates(
             left = tankLeftTopCoordinate.left + myTank.layoutParams.width
         )
     }
-    return tankLeftTopCoordinate
 }
 
 private fun getDistanceToMiddleOfTank(startCoordinate: Int, bulletSize: Int): Int {

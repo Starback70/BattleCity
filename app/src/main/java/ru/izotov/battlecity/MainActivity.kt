@@ -12,8 +12,12 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import ru.izotov.battlecity.drawers.*
+import ru.izotov.battlecity.enums.Direction
 import ru.izotov.battlecity.enums.Direction.*
 import ru.izotov.battlecity.enums.Material.*
+import ru.izotov.battlecity.models.Coordinate
+import ru.izotov.battlecity.models.Element
+import ru.izotov.battlecity.models.Tank
 
 const val CELL_SIZE = 50
 const val HORIZONTAL_CELL_AMOUNT = 38
@@ -23,6 +27,15 @@ const val VERTICAL_SIZE = CELL_SIZE * VERTICAL_CELL_AMOUNT
 
 
 class MainActivity : AppCompatActivity() {
+    private val playerTank = Tank(
+        Element(
+            R.id.myTank,
+            PLAYER_TANK,
+            Coordinate(0, 0),
+            PLAYER_TANK.width,
+            PLAYER_TANK.height,
+        ), UP
+    )
     private lateinit var clear: ImageView
     private lateinit var brick: ImageView
     private lateinit var concrete: ImageView
@@ -37,9 +50,6 @@ class MainActivity : AppCompatActivity() {
     }
     private val elementsDrawer by lazy {
         ElementsDrawer(container)
-    }
-    private val tankDrawer by lazy {
-        TankDrawer(container)
     }
     private val bulletDrawer by lazy {
         BulletDrawer(container)
@@ -66,6 +76,7 @@ class MainActivity : AppCompatActivity() {
         }
         elementsDrawer.drawElementsList(levelStorage.loadLevel())
         hideSettings()
+        elementsDrawer.elementsOnContainer.add(playerTank.element)
     }
     
     private fun init() {
@@ -131,16 +142,21 @@ class MainActivity : AppCompatActivity() {
     
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         when (keyCode) {
-            KEYCODE_DPAD_UP -> tankDrawer.move(myTank, UP, elementsDrawer.elementsOnContainer)
-            KEYCODE_DPAD_LEFT -> tankDrawer.move(myTank, LEFT, elementsDrawer.elementsOnContainer)
-            KEYCODE_DPAD_DOWN -> tankDrawer.move(myTank, DOWN, elementsDrawer.elementsOnContainer)
-            KEYCODE_DPAD_RIGHT -> tankDrawer.move(myTank, RIGHT, elementsDrawer.elementsOnContainer)
+            KEYCODE_DPAD_UP -> move(UP)
+            KEYCODE_DPAD_LEFT -> move(LEFT)
+            KEYCODE_DPAD_DOWN -> move(DOWN)
+            KEYCODE_DPAD_RIGHT -> move(RIGHT)
             KEYCODE_SPACE -> bulletDrawer.makeBulletMove(
                 myTank,
-                tankDrawer.currentDirection,
+                playerTank.direction,
                 elementsDrawer.elementsOnContainer
             )
         }
         return super.onKeyDown(keyCode, event)
+    }
+    
+    private fun move(direction: Direction){
+        playerTank.move(direction, container, elementsDrawer.elementsOnContainer)
+        
     }
 }
