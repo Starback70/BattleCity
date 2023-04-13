@@ -5,16 +5,16 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import ru.izotov.battlecity.CELL_SIZE
-import ru.izotov.battlecity.HORIZONTAL_SIZE
-import ru.izotov.battlecity.VERTICAL_SIZE
+import ru.izotov.battlecity.HORIZONTAL_MAX_SIZE
+import ru.izotov.battlecity.VERTICAL_MAX_SIZE
 import ru.izotov.battlecity.models.Coordinate
 import ru.izotov.battlecity.models.Element
 
 fun View.checkViewCanMoveThroughBorder(coordinate: Coordinate): Boolean {
     if (coordinate.top >= 0
-        && coordinate.top + this.height <= VERTICAL_SIZE
+        && coordinate.top + this.height <= HORIZONTAL_MAX_SIZE
         && coordinate.left >= 0
-        && coordinate.left + this.width <= HORIZONTAL_SIZE
+        && coordinate.left + this.width <= VERTICAL_MAX_SIZE
     ) {
         return true
     }

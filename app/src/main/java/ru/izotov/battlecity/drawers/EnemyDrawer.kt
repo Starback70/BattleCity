@@ -18,7 +18,7 @@ class EnemyDrawer(
     private val elements: MutableList<Element>
 ) {
     private val respawnList: List<Coordinate>
-    private var enemyCount = 0
+    private var enemyAmount = 0
     private var currentCoordinate: Coordinate
     private val tanks = mutableListOf<Tank>()
     
@@ -37,9 +37,9 @@ class EnemyDrawer(
     
     fun startEnemyCreation() {
         Thread {
-            while (enemyCount < MAX_ENEMY_AMOUNT) {
-                enemyCount++;
+            while (enemyAmount < MAX_ENEMY_AMOUNT) {
                 drawEnemy()
+                enemyAmount++;
                 Thread.sleep(TIME_ENEMY_RESPAWN)
             }
         }.start()
@@ -54,9 +54,7 @@ class EnemyDrawer(
         val enemyTank = Tank(
             Element(
                 material = ENEMY_TANK,
-                coordinate = currentCoordinate,
-                width = ENEMY_TANK.width,
-                height = ENEMY_TANK.height
+                coordinate = currentCoordinate
             ), DOWN
         )
         enemyTank.element.drawElement(container)

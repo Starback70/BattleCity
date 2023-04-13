@@ -20,31 +20,44 @@ import ru.izotov.battlecity.models.Element
 import ru.izotov.battlecity.models.Tank
 
 const val CELL_SIZE = 50
-const val HORIZONTAL_CELL_AMOUNT = 38
-const val VERTICAL_CELL_AMOUNT = 25
-const val HORIZONTAL_SIZE = CELL_SIZE * HORIZONTAL_CELL_AMOUNT
-const val VERTICAL_SIZE = CELL_SIZE * VERTICAL_CELL_AMOUNT
-
+const val VERTICAL_CELL_AMOUNT = 38
+const val HORIZONTAL_CELL_AMOUNT = 25
+const val VERTICAL_MAX_SIZE = CELL_SIZE * VERTICAL_CELL_AMOUNT
+const val HORIZONTAL_MAX_SIZE = CELL_SIZE * HORIZONTAL_CELL_AMOUNT
+const val HALF_WIDTH_OF_CONTAINER = VERTICAL_MAX_SIZE / 2
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var editor_clear: ImageView
+    private lateinit var editor_brick: ImageView
+    private lateinit var editor_concrete: ImageView
+    private lateinit var editor_grass: ImageView
+    private lateinit var editor_eagle: ImageView
+    private lateinit var container: FrameLayout
+    private lateinit var materials_container: LinearLayout
     private var editMode = false
     private val playerTank = Tank(
         Element(
-            R.id.myTank,
-            PLAYER_TANK,
-            Coordinate(0, 0),
-            PLAYER_TANK.width,
-            PLAYER_TANK.height
+            material = PLAYER_TANK,
+            coordinate = getPlayerTankCoordinate()
         ), UP
     )
-    private lateinit var clear: ImageView
-    private lateinit var brick: ImageView
-    private lateinit var concrete: ImageView
-    private lateinit var grass: ImageView
-    private lateinit var eagle: ImageView
-    private lateinit var myTank: ImageView
-    private lateinit var container: FrameLayout
-    private lateinit var materialsContainer: LinearLayout
+    
+    private fun getPlayerTankCoordinate() = Coordinate(
+        top = HORIZONTAL_MAX_SIZE - PLAYER_TANK.height * CELL_SIZE,
+        left = HALF_WIDTH_OF_CONTAINER - 8 * CELL_SIZE
+    )
+    
+    private val eagle = Element(
+        material = EAGLE,
+        coordinate = getEagleCoordinate()
+    )
+    
+    
+    private fun getEagleCoordinate() = Coordinate(
+        top = HORIZONTAL_MAX_SIZE - EAGLE.height * CELL_SIZE,
+        left = HALF_WIDTH_OF_CONTAINER - EAGLE.width * CELL_SIZE / 2
+    )
+    
     private val gridDrawer by lazy {
         GridDrawer(container)
     }
@@ -69,40 +82,39 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         init()
-        container.layoutParams = FrameLayout.LayoutParams(HORIZONTAL_SIZE, VERTICAL_SIZE)
-        clear.setOnClickListener { elementsDrawer.currentMaterial = EMPTY }
-        brick.setOnClickListener { elementsDrawer.currentMaterial = BRICK }
-        concrete.setOnClickListener { elementsDrawer.currentMaterial = CONCRETE }
-        grass.setOnClickListener { elementsDrawer.currentMaterial = GRASS }
-        eagle.setOnClickListener { elementsDrawer.currentMaterial = EAGLE }
+        container.layoutParams = FrameLayout.LayoutParams(VERTICAL_MAX_SIZE, HORIZONTAL_MAX_SIZE)
+        editor_clear.setOnClickListener { elementsDrawer.currentMaterial = EMPTY }
+        editor_brick.setOnClickListener { elementsDrawer.currentMaterial = BRICK }
+        editor_concrete.setOnClickListener { elementsDrawer.currentMaterial = CONCRETE }
+        editor_grass.setOnClickListener { elementsDrawer.currentMaterial = GRASS }
+        editor_eagle.setOnClickListener { elementsDrawer.currentMaterial = EAGLE }
         container.setOnTouchListener { _, event ->
             elementsDrawer.onTouchContainer(event.x, event.y)
             return@setOnTouchListener true
         }
         elementsDrawer.drawElementsList(levelStorage.loadLevel())
+        elementsDrawer.drawElementsList(listOf(playerTank.element, eagle))
         hideSettings()
-//        elementsDrawer.elementsOnContainer.add(playerTank.element)
     }
     
     private fun init() {
         container = findViewById(R.id.container)
-        materialsContainer = findViewById(R.id.materials_container)
-        myTank = findViewById(R.id.myTank)
-        clear = findViewById(R.id.editor_clear)
-        brick = findViewById(R.id.editor_brick)
-        concrete = findViewById(R.id.editor_concrete)
-        grass = findViewById(R.id.editor_grass)
-        eagle = findViewById(R.id.editor_eagle)
+        materials_container = findViewById(R.id.materials_container)
+        editor_clear = findViewById(R.id.editor_clear)
+        editor_brick = findViewById(R.id.editor_brick)
+        editor_concrete = findViewById(R.id.editor_concrete)
+        editor_grass = findViewById(R.id.editor_grass)
+        editor_eagle = findViewById(R.id.editor_eagle)
     }
     
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.settings, menu)
         return true
     }
-
+    
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.menu_setting -> {
+            R.id.menu_settings -> {
                 switchEditMode()
                 true
             }
@@ -111,21 +123,21 @@ class MainActivity : AppCompatActivity() {
                 true
             }
             R.id.menu_play -> {
-                startGame()
+                startTheGame()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
-
-    private fun startGame() {
+    
+    private fun startTheGame() {
         if (editMode) {
             return
         }
         enemyDrawer.startEnemyCreation()
         enemyDrawer.moveEnemyTanks()
     }
-
+    
     private fun switchEditMode() {
         editMode = !editMode
         if (editMode) {
@@ -134,15 +146,15 @@ class MainActivity : AppCompatActivity() {
             hideSettings()
         }
     }
-
+    
     private fun showSettings() {
         gridDrawer.drawGrid()
-        materialsContainer.visibility = VISIBLE
+        materials_container.visibility = VISIBLE
     }
     
     private fun hideSettings() {
         gridDrawer.removeGrid()
-        materialsContainer.visibility = GONE
+        materials_container.visibility = GONE
     }
     
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -152,7 +164,7 @@ class MainActivity : AppCompatActivity() {
             KEYCODE_DPAD_DOWN -> move(DOWN)
             KEYCODE_DPAD_RIGHT -> move(RIGHT)
             KEYCODE_SPACE -> bulletDrawer.makeBulletMove(
-                myTank,
+                container.findViewById(playerTank.element.viewId),
                 playerTank.direction,
                 elementsDrawer.elementsOnContainer
             )
@@ -162,6 +174,5 @@ class MainActivity : AppCompatActivity() {
     
     private fun move(direction: Direction) {
         playerTank.move(direction, container, elementsDrawer.elementsOnContainer)
-        
     }
 }
