@@ -39,7 +39,15 @@ class MainActivity : AppCompatActivity() {
             Element(
                 material = PLAYER_TANK,
                 coordinate = getPlayerTankCoordinate()
-            ), UP, BulletDrawer(container, elementsDrawer.elementsOnContainer, enemyDrawer)
+            ), UP, enemyDrawer
+        )
+    }
+    
+    private val bulletDrawer by lazy {
+        BulletDrawer(
+            container,
+            elementsDrawer.elementsOnContainer,
+            enemyDrawer
         )
     }
     
@@ -103,6 +111,7 @@ class MainActivity : AppCompatActivity() {
         editor_brick = findViewById(R.id.editor_brick)
         editor_concrete = findViewById(R.id.editor_concrete)
         editor_grass = findViewById(R.id.editor_grass)
+        enemyDrawer.bulletDrawer = bulletDrawer
     }
     
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -161,7 +170,7 @@ class MainActivity : AppCompatActivity() {
             KEYCODE_DPAD_LEFT -> move(LEFT)
             KEYCODE_DPAD_DOWN -> move(DOWN)
             KEYCODE_DPAD_RIGHT -> move(RIGHT)
-            KEYCODE_SPACE -> playerTank.bulletDrawer.makeBulletMove(playerTank)
+            KEYCODE_SPACE -> bulletDrawer.addNewBulletForTank(playerTank)
         }
         return super.onKeyDown(keyCode, event)
     }
