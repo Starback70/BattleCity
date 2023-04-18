@@ -1,5 +1,6 @@
 package ru.izotov.battlecity
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.KeyEvent.*
@@ -11,7 +12,13 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
-import ru.izotov.battlecity.drawers.*
+import androidx.core.content.ContextCompat
+import ru.izotov.battlecity.GameCore.isPlaying
+import ru.izotov.battlecity.GameCore.startOrPauseTheGame
+import ru.izotov.battlecity.drawers.BulletDrawer
+import ru.izotov.battlecity.drawers.ElementsDrawer
+import ru.izotov.battlecity.drawers.EnemyDrawer
+import ru.izotov.battlecity.drawers.GridDrawer
 import ru.izotov.battlecity.enums.Direction
 import ru.izotov.battlecity.enums.Direction.*
 import ru.izotov.battlecity.enums.Material.*
@@ -27,6 +34,7 @@ const val HORIZONTAL_MAX_SIZE = CELL_SIZE * HORIZONTAL_CELL_AMOUNT
 const val HALF_WIDTH_OF_CONTAINER = VERTICAL_MAX_SIZE / 2
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var item: MenuItem
     private lateinit var editor_clear: ImageView
     private lateinit var editor_brick: ImageView
     private lateinit var editor_concrete: ImageView
@@ -83,6 +91,7 @@ class MainActivity : AppCompatActivity() {
         EnemyDrawer(container, elementsDrawer.elementsOnContainer)
     }
     
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -116,6 +125,7 @@ class MainActivity : AppCompatActivity() {
     
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.settings, menu)
+        item = menu.findItem(R.id.menu_play)
         return true
     }
     
@@ -130,7 +140,17 @@ class MainActivity : AppCompatActivity() {
                 true
             }
             R.id.menu_play -> {
+                if (editMode) {
+                    return true
+                }
+                startOrPauseTheGame()
+                if (isPlaying()) {
+                    startTheGame()
+                } else {
+                    pauseTheGame()
+                }
                 startTheGame()
+                
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -138,11 +158,18 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun startTheGame() {
-        if (editMode) {
-            return
-        }
+        item.icon = ContextCompat.getDrawable(this, R.drawable.ic_pause)
         enemyDrawer.startEnemyCreation()
-        enemyDrawer.moveEnemyTanks()
+    }
+    
+    private fun pauseTheGame() {
+        item.icon = ContextCompat.getDrawable(this, R.drawable.ic_play)
+        GameCore.pauseTheGame()
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        GameCore.pauseTheGame()
     }
     
     private fun switchEditMode() {
@@ -165,6 +192,9 @@ class MainActivity : AppCompatActivity() {
     }
     
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (!isPlaying()) {
+            return super.onKeyDown(keyCode, event)
+        }
         when (keyCode) {
             KEYCODE_DPAD_UP -> move(UP)
             KEYCODE_DPAD_LEFT -> move(LEFT)

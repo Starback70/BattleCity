@@ -2,6 +2,7 @@ package ru.izotov.battlecity.drawers
 
 import android.widget.FrameLayout
 import ru.izotov.battlecity.CELL_SIZE
+import ru.izotov.battlecity.GameCore
 import ru.izotov.battlecity.HALF_WIDTH_OF_CONTAINER
 import ru.izotov.battlecity.VERTICAL_MAX_SIZE
 import ru.izotov.battlecity.enums.Direction.*
@@ -26,6 +27,7 @@ class EnemyDrawer(
     private var currentCoordinate: Coordinate
     val tanks = mutableListOf<Tank>()
     lateinit var bulletDrawer: BulletDrawer
+    private var gameStarted = false
     
     init {
         respawnList = getRespawnList()
@@ -41,13 +43,21 @@ class EnemyDrawer(
     }
     
     fun startEnemyCreation() {
+        if (gameStarted) {
+            return
+        }
+        gameStarted = true
         Thread {
             while (enemyAmount < MAX_ENEMY_AMOUNT) {
+                if (!GameCore.isPlaying()) {
+                    continue
+                }
                 drawEnemy()
                 enemyAmount++
                 Thread.sleep(TIME_ENEMY_RESPAWN)
             }
         }.start()
+        moveEnemyTanks()
     }
     
     private fun drawEnemy() {
@@ -66,9 +76,12 @@ class EnemyDrawer(
         tanks.add(enemyTank)
     }
     
-    fun moveEnemyTanks() {
+    private fun moveEnemyTanks() {
         Thread {
             while (true) {
+                if (!GameCore.isPlaying()) {
+                    continue
+                }
                 goThroughAllTanks()
                 Thread.sleep(ENEMY_SPEED)
             }

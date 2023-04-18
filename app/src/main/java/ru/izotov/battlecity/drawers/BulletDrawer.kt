@@ -5,6 +5,7 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import ru.izotov.battlecity.CELL_SIZE
+import ru.izotov.battlecity.GameCore.isPlaying
 import ru.izotov.battlecity.R
 import ru.izotov.battlecity.enums.Direction
 import ru.izotov.battlecity.enums.Direction.*
@@ -38,7 +39,10 @@ class BulletDrawer(
     private var allBullets = mutableListOf<Bullet>()
     private fun moveAllBullets() {
         Thread {
-            while (true) {
+            while (isPlaying()) {
+                if (!isPlaying()) {
+                    continue
+                }
                 interactWithAllBullets()
                 Thread.sleep(30)
             }
