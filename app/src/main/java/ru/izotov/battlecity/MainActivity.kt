@@ -34,6 +34,7 @@ const val HORIZONTAL_MAX_SIZE = CELL_SIZE * HORIZONTAL_CELL_AMOUNT
 const val HALF_WIDTH_OF_CONTAINER = VERTICAL_MAX_SIZE / 2
 
 class MainActivity : AppCompatActivity() {
+    private var editMode = false
     private lateinit var item: MenuItem
     private lateinit var editor_clear: ImageView
     private lateinit var editor_brick: ImageView
@@ -41,7 +42,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var editor_grass: ImageView
     private lateinit var container: FrameLayout
     private lateinit var materials_container: LinearLayout
-    private var editMode = false
     private val playerTank by lazy {
         Tank(
             Element(
@@ -113,6 +113,8 @@ class MainActivity : AppCompatActivity() {
         hideSettings()
     }
     
+    
+    
     private fun init() {
         container = findViewById(R.id.container)
         materials_container = findViewById(R.id.materials_container)
@@ -121,6 +123,7 @@ class MainActivity : AppCompatActivity() {
         editor_concrete = findViewById(R.id.editor_concrete)
         editor_grass = findViewById(R.id.editor_grass)
         enemyDrawer.bulletDrawer = bulletDrawer
+        SoundManager.context = this
     }
     
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -160,11 +163,13 @@ class MainActivity : AppCompatActivity() {
     private fun startTheGame() {
         item.icon = ContextCompat.getDrawable(this, R.drawable.ic_pause)
         enemyDrawer.startEnemyCreation()
+        SoundManager.playIntroMusic()
     }
     
     private fun pauseTheGame() {
         item.icon = ContextCompat.getDrawable(this, R.drawable.ic_play)
         GameCore.pauseTheGame()
+        SoundManager.pauseSounds()
     }
     
     override fun onPause() {
@@ -196,16 +201,30 @@ class MainActivity : AppCompatActivity() {
             return super.onKeyDown(keyCode, event)
         }
         when (keyCode) {
-            KEYCODE_DPAD_UP -> move(UP)
-            KEYCODE_DPAD_LEFT -> move(LEFT)
-            KEYCODE_DPAD_DOWN -> move(DOWN)
-            KEYCODE_DPAD_RIGHT -> move(RIGHT)
+            KEYCODE_DPAD_UP -> onButtonPressed(UP)
+            KEYCODE_DPAD_LEFT -> onButtonPressed(LEFT)
+            KEYCODE_DPAD_DOWN -> onButtonPressed(DOWN)
+            KEYCODE_DPAD_RIGHT -> onButtonPressed(RIGHT)
             KEYCODE_SPACE -> bulletDrawer.addNewBulletForTank(playerTank)
         }
         return super.onKeyDown(keyCode, event)
     }
     
-    private fun move(direction: Direction) {
+    private fun onButtonPressed(direction: Direction) {
+        SoundManager.tankMove()
         playerTank.move(direction, container, elementsDrawer.elementsOnContainer)
+    }
+    
+    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        when (keyCode) {
+            KEYCODE_DPAD_UP, KEYCODE_DPAD_LEFT, KEYCODE_DPAD_DOWN, KEYCODE_DPAD_RIGHT -> onButtonReleased()
+        }
+        return super.onKeyUp(keyCode, event)
+    }
+    
+    private fun onButtonReleased() {
+        if (enemyDrawer.tanks.isEmpty()) {
+            SoundManager.tankStop()
+        }
     }
 }

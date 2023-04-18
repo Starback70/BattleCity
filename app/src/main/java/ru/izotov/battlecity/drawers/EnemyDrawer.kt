@@ -1,10 +1,7 @@
 package ru.izotov.battlecity.drawers
 
 import android.widget.FrameLayout
-import ru.izotov.battlecity.CELL_SIZE
-import ru.izotov.battlecity.GameCore
-import ru.izotov.battlecity.HALF_WIDTH_OF_CONTAINER
-import ru.izotov.battlecity.VERTICAL_MAX_SIZE
+import ru.izotov.battlecity.*
 import ru.izotov.battlecity.enums.Direction.*
 import ru.izotov.battlecity.enums.Material.ENEMY_TANK
 import ru.izotov.battlecity.models.Coordinate
@@ -89,6 +86,11 @@ class EnemyDrawer(
     }
     
     private fun goThroughAllTanks() {
+        if (tanks.isNotEmpty()) {
+            SoundManager.tankMove()
+        } else {
+            SoundManager.tankStop()
+        }
         tanks.toList().forEach {
             it.move(it.direction, container, elements)
             if (checkIfChanceBiggerThanRandom(CHANCE_OF_SHOT)) {
@@ -98,7 +100,6 @@ class EnemyDrawer(
     }
     
     fun removeTank(tankIndex: Int) {
-        if (tankIndex < 0) return
         tanks.removeAt(tankIndex)
     }
 }

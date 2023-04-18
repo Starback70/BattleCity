@@ -7,6 +7,7 @@ import android.widget.ImageView
 import ru.izotov.battlecity.CELL_SIZE
 import ru.izotov.battlecity.GameCore.isPlaying
 import ru.izotov.battlecity.R
+import ru.izotov.battlecity.SoundManager
 import ru.izotov.battlecity.enums.Direction
 import ru.izotov.battlecity.enums.Direction.*
 import ru.izotov.battlecity.enums.Material
@@ -32,6 +33,7 @@ class BulletDrawer(
         val view = container.findViewById<View>(tank.element.viewId) ?: return
         if (tank.alreadyHasBullet()) return
         allBullets.add(Bullet(createBullet(view, tank.direction), tank.direction, tank))
+        SoundManager.bulletShot()
     }
     
     private fun Tank.alreadyHasBullet(): Boolean = allBullets.firstOrNull { it.tank == this } != null
@@ -39,7 +41,7 @@ class BulletDrawer(
     private var allBullets = mutableListOf<Bullet>()
     private fun moveAllBullets() {
         Thread {
-            while (isPlaying()) {
+            while (true ) {
                 if (!isPlaying()) {
                     continue
                 }
@@ -154,6 +156,8 @@ class BulletDrawer(
     private fun removeTank(element: Element) {
         val tanksElements = enemyDrawer.tanks.map { it.element }
         val tankIndex = tanksElements.indexOf(element)
+        if (tankIndex < 0) return
+        SoundManager.bulletBurst()
         enemyDrawer.removeTank(tankIndex)
     }
     
