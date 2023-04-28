@@ -14,7 +14,7 @@ import ru.izotov.battlecity.sounds.MainSoundPlayer
 import ru.izotov.battlecity.utils.checkIfChanceBiggerThanRandom
 import ru.izotov.battlecity.utils.drawElement
 
-private const val MAX_ENEMY_AMOUNT = 20
+private const val MAX_ENEMY_AMOUNT = 2
 private const val TIME_ENEMY_RESPAWN: Long = 3000
 private const val ENEMY_SPEED: Long = 400
 private const val CHANCE_OF_SHOT: Int = 10

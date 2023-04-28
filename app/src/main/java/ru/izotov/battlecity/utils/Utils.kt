@@ -4,9 +4,9 @@ import android.app.Activity
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
-import ru.izotov.battlecity.CELL_SIZE
-import ru.izotov.battlecity.HORIZONTAL_MAX_SIZE
-import ru.izotov.battlecity.VERTICAL_MAX_SIZE
+import ru.izotov.battlecity.activities.CELL_SIZE
+import ru.izotov.battlecity.activities.HORIZONTAL_MAX_SIZE
+import ru.izotov.battlecity.activities.VERTICAL_MAX_SIZE
 import ru.izotov.battlecity.models.Coordinate
 import ru.izotov.battlecity.models.Element
 import ru.izotov.battlecity.models.Tank

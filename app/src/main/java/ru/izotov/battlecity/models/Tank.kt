@@ -2,8 +2,7 @@ package ru.izotov.battlecity.models
 
 import android.view.View
 import android.widget.FrameLayout
-import ru.izotov.battlecity.CELL_SIZE
-import ru.izotov.battlecity.drawers.BulletDrawer
+import ru.izotov.battlecity.activities.CELL_SIZE
 import ru.izotov.battlecity.drawers.EnemyDrawer
 import ru.izotov.battlecity.enums.Direction
 import ru.izotov.battlecity.enums.Material
@@ -48,7 +47,7 @@ class Tank constructor(
     }
     
     private fun changeDirectionForEnemyTank() {
-        if(element.material == Material.ENEMY_TANK) {
+        if (element.material == Material.ENEMY_TANK) {
             val randomDirection = Direction.values()[Random.nextInt(Direction.values().size)]
             this.direction = randomDirection
         }

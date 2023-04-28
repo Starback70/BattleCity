@@ -2,7 +2,7 @@ package ru.izotov.battlecity.drawers
 
 import android.view.View
 import android.widget.FrameLayout
-import ru.izotov.battlecity.CELL_SIZE
+import ru.izotov.battlecity.activities.CELL_SIZE
 import ru.izotov.battlecity.enums.Material.EMPTY
 import ru.izotov.battlecity.models.Coordinate
 import ru.izotov.battlecity.models.Element
