@@ -2,6 +2,9 @@ package ru.izotov.battlecity.drawers
 
 import android.widget.FrameLayout
 import ru.izotov.battlecity.*
+import ru.izotov.battlecity.activities.CELL_SIZE
+import ru.izotov.battlecity.activities.HALF_WIDTH_OF_CONTAINER
+import ru.izotov.battlecity.activities.VERTICAL_MAX_SIZE
 import ru.izotov.battlecity.enums.Direction.*
 import ru.izotov.battlecity.enums.Material.ENEMY_TANK
 import ru.izotov.battlecity.models.Coordinate
@@ -102,7 +105,18 @@ class EnemyDrawer(
         }
     }
     
+    private fun isAllTankDestroyed(): Boolean {
+        return enemyAmount == MAX_ENEMY_AMOUNT && tanks.toList().isEmpty()
+    }
+    
+    private fun getPlayerScore() = enemyAmount * 100
+    
     fun removeTank(tankIndex: Int) {
         tanks.removeAt(tankIndex)
+        if (isAllTankDestroyed()) {
+            gameCore.playerWon(getPlayerScore())
+        }
     }
+    
+    
 }

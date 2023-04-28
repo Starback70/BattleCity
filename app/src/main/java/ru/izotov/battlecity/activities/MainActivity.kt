@@ -1,6 +1,8 @@
-package ru.izotov.battlecity
+package ru.izotov.battlecity.activities
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.KeyEvent.*
@@ -13,6 +15,9 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import ru.izotov.battlecity.GameCore
+import ru.izotov.battlecity.LevelStorage
+import ru.izotov.battlecity.R
 import ru.izotov.battlecity.drawers.BulletDrawer
 import ru.izotov.battlecity.drawers.ElementsDrawer
 import ru.izotov.battlecity.drawers.EnemyDrawer
@@ -234,5 +239,12 @@ class MainActivity : AppCompatActivity() {
         if (enemyDrawer.tanks.isEmpty()) {
             soundManager.tankStop()
         }
+    }
+    
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (resultCode == Activity.RESULT_OK && requestCode == SCORE_REQUEST_CODE) {
+            recreate()
+        }
+        super.onActivityResult(requestCode, resultCode, data)
     }
 }

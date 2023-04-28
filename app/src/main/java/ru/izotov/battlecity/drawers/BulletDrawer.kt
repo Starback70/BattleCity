@@ -4,10 +4,9 @@ import android.app.Activity
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
-import ru.izotov.battlecity.CELL_SIZE
 import ru.izotov.battlecity.GameCore
 import ru.izotov.battlecity.R
-import ru.izotov.battlecity.sounds.MainSoundPlayer
+import ru.izotov.battlecity.activities.CELL_SIZE
 import ru.izotov.battlecity.enums.Direction
 import ru.izotov.battlecity.enums.Direction.*
 import ru.izotov.battlecity.enums.Material
@@ -15,6 +14,7 @@ import ru.izotov.battlecity.models.Bullet
 import ru.izotov.battlecity.models.Coordinate
 import ru.izotov.battlecity.models.Element
 import ru.izotov.battlecity.models.Tank
+import ru.izotov.battlecity.sounds.MainSoundPlayer
 import ru.izotov.battlecity.utils.*
 
 private const val BULLET_WIDTH = 15
@@ -169,6 +169,7 @@ class BulletDrawer(
         if (tankIndex < 0) return
         soundManager.bulletBurst()
         enemyDrawer.removeTank(tankIndex)
+        
     }
     
     private fun stopBullet(bullet: Bullet) {
