@@ -7,6 +7,7 @@ class GameSound(
     var isStarted: Boolean = false,
     val pool: SoundPool
 ) {
+    
     fun play() {
         pool.play(resourceInPool, 1f, 1f, 1, 0, 1f)
     }
@@ -20,11 +21,12 @@ class GameSound(
         }
     }
     
-    private fun Boolean.toInt() = if (this) {
-        -1
-    } else {
-        0
-    }
+    private fun Boolean.toInt() =
+        if (this) {
+            -1
+        } else {
+            0
+        }
     
     fun pause() {
         pool.pause(resourceInPool)

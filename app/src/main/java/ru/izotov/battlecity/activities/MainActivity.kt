@@ -1,6 +1,5 @@
 package ru.izotov.battlecity.activities
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
@@ -13,10 +12,12 @@ import android.view.View.VISIBLE
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import ru.izotov.battlecity.GameCore
 import ru.izotov.battlecity.LevelStorage
+import ru.izotov.battlecity.ProgressIndicator
 import ru.izotov.battlecity.R
 import ru.izotov.battlecity.drawers.BulletDrawer
 import ru.izotov.battlecity.drawers.ElementsDrawer
@@ -37,15 +38,18 @@ const val VERTICAL_MAX_SIZE = CELL_SIZE * VERTICAL_CELL_AMOUNT
 const val HORIZONTAL_MAX_SIZE = CELL_SIZE * HORIZONTAL_CELL_AMOUNT
 const val HALF_WIDTH_OF_CONTAINER = VERTICAL_MAX_SIZE / 2
 
-class MainActivity : AppCompatActivity() {
-    private var editMode = false
-    private lateinit var item: MenuItem
+class MainActivity : AppCompatActivity(), ProgressIndicator {
     private lateinit var editor_clear: ImageView
     private lateinit var editor_brick: ImageView
     private lateinit var editor_concrete: ImageView
     private lateinit var editor_grass: ImageView
+    private lateinit var total_container: FrameLayout
     private lateinit var container: FrameLayout
+    private lateinit var init_title: TextView
     private lateinit var materials_container: LinearLayout
+    private var editMode = false
+    private lateinit var item: MenuItem
+    private var gameStarted = false
     private val playerTank by lazy {
         Tank(
             Element(
@@ -65,12 +69,12 @@ class MainActivity : AppCompatActivity() {
         )
     }
     
-    private val soundManager by lazy {
-        MainSoundPlayer(this)
-    }
-    
     private val gameCore by lazy {
         GameCore(this)
+    }
+    
+    private val soundManager by lazy {
+        MainSoundPlayer(this, this)
     }
     
     private fun getPlayerTankCoordinate() = Coordinate(
@@ -102,15 +106,23 @@ class MainActivity : AppCompatActivity() {
     }
     
     private val enemyDrawer by lazy {
-        EnemyDrawer(container, elementsDrawer.elementsOnContainer, soundManager, gameCore)
+        EnemyDrawer(
+            container,
+            elementsDrawer.elementsOnContainer,
+            soundManager,
+            gameCore
+        )
     }
     
-    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         init()
-        container.layoutParams = FrameLayout.LayoutParams(VERTICAL_MAX_SIZE, HORIZONTAL_MAX_SIZE)
+        enemyDrawer.bulletDrawer = bulletDrawer
+        container.layoutParams = FrameLayout.LayoutParams(
+            VERTICAL_MAX_SIZE,
+            HORIZONTAL_MAX_SIZE
+        )
         editor_clear.setOnClickListener { elementsDrawer.currentMaterial = EMPTY }
         editor_brick.setOnClickListener { elementsDrawer.currentMaterial = BRICK }
         editor_concrete.setOnClickListener { elementsDrawer.currentMaterial = CONCRETE }
@@ -129,14 +141,15 @@ class MainActivity : AppCompatActivity() {
     
     
     private fun init() {
-        soundManager.loadSounds()
+        total_container = findViewById(R.id.total_container)
         container = findViewById(R.id.container)
         materials_container = findViewById(R.id.materials_container)
         editor_clear = findViewById(R.id.editor_clear)
         editor_brick = findViewById(R.id.editor_brick)
         editor_concrete = findViewById(R.id.editor_concrete)
         editor_grass = findViewById(R.id.editor_grass)
-        enemyDrawer.bulletDrawer = bulletDrawer
+        init_title = findViewById(R.id.init_title)
+        soundManager.loadSounds()
     }
     
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -159,24 +172,32 @@ class MainActivity : AppCompatActivity() {
                 if (editMode) {
                     return true
                 }
-                gameCore.startOrPauseTheGame()
-                if (gameCore.isPlaying()) {
-                    startTheGame()
-                } else {
-                    pauseTheGame()
+                showIntro()
+                if (soundManager.areSoundsReady()) {
+                    gameCore.startOrPauseTheGame()
+                    if (gameCore.isPlaying()) {
+                        resumeTheGame()
+                    } else {
+                        pauseTheGame()
+                    }
                 }
-                startTheGame()
-                
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
     
-    private fun startTheGame() {
+    private fun resumeTheGame() {
         item.icon = ContextCompat.getDrawable(this, R.drawable.ic_pause)
-        enemyDrawer.startEnemyCreation()
-        soundManager.playIntroMusic()
+        gameCore.resumeTheGame()
+    }
+    
+    private fun showIntro() {
+        if (gameStarted) {
+            return
+        }
+        gameStarted = true
+        soundManager.loadSounds()
     }
     
     private fun pauseTheGame() {
@@ -187,7 +208,7 @@ class MainActivity : AppCompatActivity() {
     
     override fun onPause() {
         super.onPause()
-        gameCore.pauseTheGame()
+        pauseTheGame()
     }
     
     private fun switchEditMode() {
@@ -228,7 +249,11 @@ class MainActivity : AppCompatActivity() {
         playerTank.move(direction, container, elementsDrawer.elementsOnContainer)
     }
     
+    
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        if (!gameCore.isPlaying()) {
+            return super.onKeyUp(keyCode, event)
+        }
         when (keyCode) {
             KEYCODE_DPAD_UP, KEYCODE_DPAD_LEFT, KEYCODE_DPAD_DOWN, KEYCODE_DPAD_RIGHT -> onButtonReleased()
         }
@@ -246,5 +271,20 @@ class MainActivity : AppCompatActivity() {
             recreate()
         }
         super.onActivityResult(requestCode, resultCode, data)
+    }
+    
+    override fun showProgress() {
+        container.visibility = GONE
+        total_container.setBackgroundResource(R.color.gray)
+        init_title.visibility = VISIBLE
+    }
+    
+    override fun dismissProgress() {
+        container.visibility = VISIBLE
+        total_container.setBackgroundResource(R.color.black)
+        init_title.visibility = GONE
+        enemyDrawer.startEnemyCreation()
+        soundManager.playIntroMusic()
+        resumeTheGame()
     }
 }

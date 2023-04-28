@@ -25,11 +25,14 @@ class BulletDrawer(
     private val elements: MutableList<Element>,
     private val enemyDrawer: EnemyDrawer,
     private val soundManager: MainSoundPlayer,
-    private val gameCore: GameCore,
+    private val gameCore: GameCore
 ) {
+    
     init {
         moveAllBullets()
     }
+    
+    private val allBullets = mutableListOf<Bullet>()
     
     fun addNewBulletForTank(tank: Tank) {
         val view = container.findViewById<View>(tank.element.viewId) ?: return
@@ -38,9 +41,9 @@ class BulletDrawer(
         soundManager.bulletShot()
     }
     
-    private fun Tank.alreadyHasBullet(): Boolean = allBullets.firstOrNull { it.tank == this } != null
+    private fun Tank.alreadyHasBullet(): Boolean =
+        allBullets.firstOrNull { it.tank == this } != null
     
-    private var allBullets = mutableListOf<Bullet>()
     private fun moveAllBullets() {
         Thread {
             while (true) {
@@ -73,13 +76,15 @@ class BulletDrawer(
             }
             bullet.stopIntersectingBullets()
         }
-        removeIntersectingBullets()
+        removeInconsistentBullets()
     }
     
-    private fun removeIntersectingBullets() {
-        val removingList = allBullets.filter { !it.canBulletGoFurther() }
+    private fun removeInconsistentBullets() {
+        val removingList = allBullets.filter { !it.canMoveFurther }
         removingList.forEach {
-            container.runOnUiThread { container.removeView(it.view) }
+            container.runOnUiThread {
+                container.removeView(it.view)
+            }
         }
         allBullets.removeAll(removingList)
     }
@@ -100,8 +105,7 @@ class BulletDrawer(
     }
     
     private fun Bullet.canBulletGoFurther() =
-        this.view.checkViewCanMoveThroughBorder(this.view.getViewCoordinate()) && canMoveFurther
-    
+        this.view.checkViewCanMoveThroughBorder(this.view.getViewCoordinate()) && this.canMoveFurther
     
     private fun chooseBehaviorInTermsOfDirections(bullet: Bullet) {
         when (bullet.direction) {
@@ -114,14 +118,11 @@ class BulletDrawer(
         }
     }
     
-    private fun compareCollections(
-        detectedCoordinatesList: List<Coordinate>,
-        bullet: Bullet
-    ) {
+    private fun compareCollections(detectedCoordinatesList: List<Coordinate>, bullet: Bullet) {
         for (coordinate in detectedCoordinatesList) {
-            var element = getElementByCoordinates(coordinate, elements)
+            var element = getTankByCoordinates(coordinate, enemyDrawer.tanks)
             if (element == null) {
-                element = getTankByCoordinates(coordinate, enemyDrawer.tanks)
+                element = getElementByCoordinates(coordinate, elements)
             }
             if (element == bullet.tank.element) {
                 continue
@@ -130,24 +131,20 @@ class BulletDrawer(
         }
     }
     
-    private fun removeElementsAndStopBullet(
-        element: Element?,
-        bullet: Bullet
-    ) {
+    private fun removeElementsAndStopBullet(element: Element?, bullet: Bullet) {
         if (element != null) {
-            if (element.material.bulletCanGoThrough) {
+            if (bullet.tank.element.material == Material.ENEMY_TANK && element.material == Material.ENEMY_TANK) {
+                stopBullet(bullet)
                 return
             }
-            if (bullet.tank.element.material == Material.ENEMY_TANK && element.material == Material
-                    .ENEMY_TANK
-            ) {
-                stopBullet(bullet)
+            if (element.material.bulletCanGoThrough) {
                 return
             }
             if (element.material.simpleBulletCanDestroy) {
                 stopBullet(bullet)
                 removeView(element)
                 removeElement(element)
+                stopGameIfNecessary(element)
                 removeTank(element)
             } else {
                 stopBullet(bullet)
@@ -157,11 +154,13 @@ class BulletDrawer(
     
     private fun removeElement(element: Element) {
         elements.remove(element)
-        if (element.material == Material.PLAYER_TANK || element.material == Material.EAGLE) {
-            gameCore.destroyPlayerOrBase()
-        }
     }
     
+    private fun stopGameIfNecessary(element: Element) {
+        if (element.material == Material.PLAYER_TANK || element.material == Material.EAGLE) {
+            gameCore.destroyPlayerOrBase(enemyDrawer.getPlayerScore())
+        }
+    }
     
     private fun removeTank(element: Element) {
         val tanksElements = enemyDrawer.tanks.map { it.element }
@@ -169,7 +168,6 @@ class BulletDrawer(
         if (tankIndex < 0) return
         soundManager.bulletBurst()
         enemyDrawer.removeTank(tankIndex)
-        
     }
     
     private fun stopBullet(bullet: Bullet) {
@@ -183,14 +181,14 @@ class BulletDrawer(
         }
     }
     
-    
     private fun getCoordinatesForTopOrBottomDirection(bullet: Bullet): List<Coordinate> {
         val bulletCoordinate = bullet.view.getViewCoordinate()
         val leftCell = bulletCoordinate.left - bulletCoordinate.left % CELL_SIZE
         val rightCell = leftCell + CELL_SIZE
         val topCoordinate = bulletCoordinate.top - bulletCoordinate.top % CELL_SIZE
         return listOf(
-            Coordinate(topCoordinate, leftCell), Coordinate(topCoordinate, rightCell)
+            Coordinate(topCoordinate, leftCell),
+            Coordinate(topCoordinate, rightCell)
         )
     }
     
@@ -200,23 +198,27 @@ class BulletDrawer(
         val bottomCell = topCell + CELL_SIZE
         val leftCoordinate = bulletCoordinate.left - bulletCoordinate.left % CELL_SIZE
         return listOf(
-            Coordinate(topCell, leftCoordinate), Coordinate(bottomCell, leftCoordinate)
+            Coordinate(topCell, leftCoordinate),
+            Coordinate(bottomCell, leftCoordinate)
         )
     }
     
     private fun createBullet(myTank: View, currentDirection: Direction): ImageView {
-        return ImageView(container.context).apply {
-            this.setImageResource(R.drawable.bullet)
-            this.layoutParams = FrameLayout.LayoutParams(BULLET_WIDTH, BULLET_HEIGHT)
-            val bulletCoordinate = getBulletCoordinates(this, myTank, currentDirection)
-            (this.layoutParams as FrameLayout.LayoutParams).topMargin = bulletCoordinate.top
-            (this.layoutParams as FrameLayout.LayoutParams).leftMargin = bulletCoordinate.left
-            this.rotation = currentDirection.rotation
-        }
+        return ImageView(container.context)
+            .apply {
+                this.setImageResource(R.drawable.bullet)
+                this.layoutParams = FrameLayout.LayoutParams(BULLET_WIDTH, BULLET_HEIGHT)
+                val bulletCoordinate = getBulletCoordinates(this, myTank, currentDirection)
+                (this.layoutParams as FrameLayout.LayoutParams).topMargin = bulletCoordinate.top
+                (this.layoutParams as FrameLayout.LayoutParams).leftMargin = bulletCoordinate.left
+                this.rotation = currentDirection.rotation
+            }
     }
     
     private fun getBulletCoordinates(
-        bullet: ImageView, myTank: View, currentDirection: Direction
+        bullet: ImageView,
+        myTank: View,
+        currentDirection: Direction
     ): Coordinate {
         val tankLeftTopCoordinate = Coordinate(myTank.top, myTank.left)
         return when (currentDirection) {

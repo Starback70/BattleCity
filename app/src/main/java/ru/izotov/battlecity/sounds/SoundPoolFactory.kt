@@ -5,14 +5,14 @@ import android.media.SoundPool
 import android.os.Build
 
 class SoundPoolFactory {
-    private val masStreamsAmount = 6
+    private val maxStreamsAmount = 6
     fun createSoundPool(): SoundPool {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             SoundPool.Builder()
-                .setMaxStreams(masStreamsAmount)
+                .setMaxStreams(maxStreamsAmount)
                 .build()
         } else {
-            SoundPool(masStreamsAmount, AudioManager.STREAM_MUSIC, 0)
+            SoundPool(maxStreamsAmount, AudioManager.STREAM_MUSIC, 0)
         }
     }
 }

@@ -1,16 +1,14 @@
 package ru.izotov.battlecity.sounds
 
 import android.content.Context
-import android.content.pm.PackageManager.OnChecksumsReadyListener
 import ru.izotov.battlecity.R
 
 class ScoreSoundPlayer(
     private val context: Context,
     private val soundReadyListener: () -> Unit
-    
 ) {
     private lateinit var scoreSound: GameSound
-    private var soundPool = SoundPoolFactory().createSoundPool()
+    private val soundPool = SoundPoolFactory().createSoundPool()
     
     init {
         loadSounds()
@@ -30,10 +28,7 @@ class ScoreSoundPlayer(
         }
     }
     
-    
     fun pauseScoreSound() {
         scoreSound.pause()
     }
-    
-    
 }

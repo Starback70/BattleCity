@@ -12,8 +12,7 @@ import ru.izotov.battlecity.sounds.ScoreSoundPlayer
 const val SCORE_REQUEST_CODE = 100
 
 class ScoreActivity : AppCompatActivity() {
-    private lateinit var scoreTextView: TextView
-    
+    private lateinit var score_text_view: TextView
     
     companion object {
         const val EXTRA_SCORE = "extra_score"
@@ -37,11 +36,12 @@ class ScoreActivity : AppCompatActivity() {
             var currentScore = 0
             while (currentScore <= score) {
                 runOnUiThread {
-                    scoreTextView.text = currentScore.toString()
+                    score_text_view.text = currentScore.toString()
                     currentScore += 100
                 }
                 Thread.sleep(150)
             }
+            scoreSoundPlayer.pauseScoreSound()
         }.start()
     }
     
@@ -52,8 +52,7 @@ class ScoreActivity : AppCompatActivity() {
         setContentView(R.layout.activity_score)
         score = intent.getIntExtra(EXTRA_SCORE, 0)
         scoreSoundPlayer.playScoreSound()
-        scoreTextView = findViewById(R.id.score_text_view)
-        
+        score_text_view = findViewById(R.id.score_text_view)
     }
     
     override fun onBackPressed() {

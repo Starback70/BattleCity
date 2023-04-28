@@ -12,11 +12,9 @@
         android:gravity="center"
         android:textAllCaps="true"
         android:textColor="@android:color/white"
-
         android:textSize="64sp"
         android:textStyle="bold"
-        android:text="Stage 1"
-        />
+        android:text="Stage 1"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -31,8 +29,7 @@
             android:layout_weight="1"
             android:textColor="@android:color/white"
             android:textSize="90sp"
-            android:text="20"
-            />
+            android:text="20"/>
 
         <ImageView
             android:layout_width="0dp"
