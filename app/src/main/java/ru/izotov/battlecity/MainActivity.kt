@@ -13,8 +13,6 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import ru.izotov.battlecity.GameCore.isPlaying
-import ru.izotov.battlecity.GameCore.startOrPauseTheGame
 import ru.izotov.battlecity.drawers.BulletDrawer
 import ru.izotov.battlecity.drawers.ElementsDrawer
 import ru.izotov.battlecity.drawers.EnemyDrawer
@@ -25,6 +23,7 @@ import ru.izotov.battlecity.enums.Material.*
 import ru.izotov.battlecity.models.Coordinate
 import ru.izotov.battlecity.models.Element
 import ru.izotov.battlecity.models.Tank
+import ru.izotov.battlecity.sounds.MainSoundPlayer
 
 const val CELL_SIZE = 50
 const val VERTICAL_CELL_AMOUNT = 38
@@ -55,8 +54,18 @@ class MainActivity : AppCompatActivity() {
         BulletDrawer(
             container,
             elementsDrawer.elementsOnContainer,
-            enemyDrawer
+            enemyDrawer,
+            soundManager,
+            gameCore
         )
+    }
+    
+    private val soundManager by lazy {
+        MainSoundPlayer(this)
+    }
+    
+    private val gameCore by lazy {
+        GameCore(this)
     }
     
     private fun getPlayerTankCoordinate() = Coordinate(
@@ -88,7 +97,7 @@ class MainActivity : AppCompatActivity() {
     }
     
     private val enemyDrawer by lazy {
-        EnemyDrawer(container, elementsDrawer.elementsOnContainer)
+        EnemyDrawer(container, elementsDrawer.elementsOnContainer, soundManager, gameCore)
     }
     
     @SuppressLint("ClickableViewAccessibility")
@@ -114,8 +123,8 @@ class MainActivity : AppCompatActivity() {
     }
     
     
-    
     private fun init() {
+        soundManager.loadSounds()
         container = findViewById(R.id.container)
         materials_container = findViewById(R.id.materials_container)
         editor_clear = findViewById(R.id.editor_clear)
@@ -123,7 +132,6 @@ class MainActivity : AppCompatActivity() {
         editor_concrete = findViewById(R.id.editor_concrete)
         editor_grass = findViewById(R.id.editor_grass)
         enemyDrawer.bulletDrawer = bulletDrawer
-        SoundManager.context = this
     }
     
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -146,8 +154,8 @@ class MainActivity : AppCompatActivity() {
                 if (editMode) {
                     return true
                 }
-                startOrPauseTheGame()
-                if (isPlaying()) {
+                gameCore.startOrPauseTheGame()
+                if (gameCore.isPlaying()) {
                     startTheGame()
                 } else {
                     pauseTheGame()
@@ -163,18 +171,18 @@ class MainActivity : AppCompatActivity() {
     private fun startTheGame() {
         item.icon = ContextCompat.getDrawable(this, R.drawable.ic_pause)
         enemyDrawer.startEnemyCreation()
-        SoundManager.playIntroMusic()
+        soundManager.playIntroMusic()
     }
     
     private fun pauseTheGame() {
         item.icon = ContextCompat.getDrawable(this, R.drawable.ic_play)
-        GameCore.pauseTheGame()
-        SoundManager.pauseSounds()
+        gameCore.pauseTheGame()
+        soundManager.pauseSounds()
     }
     
     override fun onPause() {
         super.onPause()
-        GameCore.pauseTheGame()
+        gameCore.pauseTheGame()
     }
     
     private fun switchEditMode() {
@@ -197,7 +205,7 @@ class MainActivity : AppCompatActivity() {
     }
     
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (!isPlaying()) {
+        if (!gameCore.isPlaying()) {
             return super.onKeyDown(keyCode, event)
         }
         when (keyCode) {
@@ -211,7 +219,7 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun onButtonPressed(direction: Direction) {
-        SoundManager.tankMove()
+        soundManager.tankMove()
         playerTank.move(direction, container, elementsDrawer.elementsOnContainer)
     }
     
@@ -224,7 +232,7 @@ class MainActivity : AppCompatActivity() {
     
     private fun onButtonReleased() {
         if (enemyDrawer.tanks.isEmpty()) {
-            SoundManager.tankStop()
+            soundManager.tankStop()
         }
     }
 }

@@ -7,6 +7,7 @@ import ru.izotov.battlecity.enums.Material.ENEMY_TANK
 import ru.izotov.battlecity.models.Coordinate
 import ru.izotov.battlecity.models.Element
 import ru.izotov.battlecity.models.Tank
+import ru.izotov.battlecity.sounds.MainSoundPlayer
 import ru.izotov.battlecity.utils.checkIfChanceBiggerThanRandom
 import ru.izotov.battlecity.utils.drawElement
 
@@ -17,7 +18,9 @@ private const val CHANCE_OF_SHOT: Int = 10
 
 class EnemyDrawer(
     private val container: FrameLayout,
-    private val elements: MutableList<Element>
+    private val elements: MutableList<Element>,
+    private val soundManager: MainSoundPlayer,
+    private val gameCore: GameCore,
 ) {
     private val respawnList: List<Coordinate>
     private var enemyAmount = 0
@@ -46,7 +49,7 @@ class EnemyDrawer(
         gameStarted = true
         Thread {
             while (enemyAmount < MAX_ENEMY_AMOUNT) {
-                if (!GameCore.isPlaying()) {
+                if (!gameCore.isPlaying()) {
                     continue
                 }
                 drawEnemy()
@@ -76,7 +79,7 @@ class EnemyDrawer(
     private fun moveEnemyTanks() {
         Thread {
             while (true) {
-                if (!GameCore.isPlaying()) {
+                if (!gameCore.isPlaying()) {
                     continue
                 }
                 goThroughAllTanks()
@@ -87,9 +90,9 @@ class EnemyDrawer(
     
     private fun goThroughAllTanks() {
         if (tanks.isNotEmpty()) {
-            SoundManager.tankMove()
+            soundManager.tankMove()
         } else {
-            SoundManager.tankStop()
+            soundManager.tankStop()
         }
         tanks.toList().forEach {
             it.move(it.direction, container, elements)

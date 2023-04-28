@@ -1,0 +1,18 @@
+package ru.izotov.battlecity.sounds
+
+import android.media.AudioManager
+import android.media.SoundPool
+import android.os.Build
+
+class SoundPoolFactory {
+    private val masStreamsAmount = 6
+    fun createSoundPool(): SoundPool {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            SoundPool.Builder()
+                .setMaxStreams(masStreamsAmount)
+                .build()
+        } else {
+            SoundPool(masStreamsAmount, AudioManager.STREAM_MUSIC, 0)
+        }
+    }
+}
